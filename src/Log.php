@@ -28,14 +28,22 @@ class Log implements LogInterface
     protected function getLevel($severity)
     {
         switch ($severity) {
-            case 1:        return 'emergency';
-            case 2:        return 'alert';
-            case 4:        return 'critical';
-            case 8:        return 'error';
-            case 16:    return 'warning';
-            case 32:    return 'notice';
-            case 64:    return 'info';
-            case 128:    return 'debug';
+            case 1:
+                return 'emergency';
+            case 2:
+                return 'alert';
+            case 4:
+                return 'critical';
+            case 8:
+                return 'error';
+            case 16:
+                return 'warning';
+            case 32:
+                return 'notice';
+            case 64:
+                return 'info';
+            case 128:
+                return 'debug';
         }
     }
     protected function getDirectory()

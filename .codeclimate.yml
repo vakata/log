@@ -17,6 +17,8 @@ engines:
         enabled: false
       Design/NpathComplexity:
         enabled: false
+      Controversial/Superglobals:
+        enabled: false
 ratings:
   paths:
   - "**.php"
