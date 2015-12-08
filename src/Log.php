@@ -54,9 +54,6 @@ class Log implements LogInterface
         if (ini_get('error_log')) {
             return dirname(ini_get('error_log'));
         }
-        if (isset($_SERVER) && isset($_SERVER['SCRIPT_NAME'])) {
-            return dirname($_SERVER['SCRIPT_NAME']);
-        }
         if (getcwd()) {
             return getcwd();
         }
