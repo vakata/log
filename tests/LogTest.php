@@ -3,13 +3,23 @@ namespace vakata\log\test;
 
 class LogTest extends \PHPUnit_Framework_TestCase
 {
+	protected static $dir = null;
+
 	public static function setUpBeforeClass() {
 	}
 	public static function tearDownAfterClass() {
 	}
 	protected function setUp() {
+		self::$dir = __DIR__ . DIRECTORY_SEPARATOR . 'log';
+		mkdir(self::$dir, 0755, true);
 	}
 	protected function tearDown() {
+		foreach(scandir(self::$dir) as $file) {
+			if (is_file(self::$dir . DIRECTORY_SEPARATOR . $file)) {
+				unlink(self::$dir . DIRECTORY_SEPARATOR . $file);
+			}
+		}
+		rmdir(self::$dir);
 	}
 
 	public function testCreate() {
@@ -20,72 +30,56 @@ class LogTest extends \PHPUnit_Framework_TestCase
 	 * @depends testCreate
 	 */
 	public function testDirs() {
-		$dir = __DIR__ . DIRECTORY_SEPARATOR . 'log1';
-		$log = new \vakata\log\Log(\vakata\log\Log::ALL, $dir);
+		$file = self::$dir . DIRECTORY_SEPARATOR . 'predefined.log';
+		$log = new \vakata\log\Log(\vakata\log\Log::ALL, $file);
 		$log->debug('DEBUG');
-		$this->assertEquals(true, strpos(file_get_contents($dir . '/debug.log'), 'DEBUG') > 0);
-		unlink($dir . '/debug.log');
-		rmdir($dir);
+		$this->assertEquals(true, strpos(file_get_contents($file), 'DEBUG') > 0);
 
-		$dir = __DIR__ . DIRECTORY_SEPARATOR . 'log2' . DIRECTORY_SEPARATOR . 'test.log';
-		ini_set('error_log', $dir);
+		$file = self::$dir . DIRECTORY_SEPARATOR . 'default.log';
+		ini_set('error_log', $file);
 		$log = new \vakata\log\Log();
 		$log->debug('DEBUG2');
-		$this->assertEquals(true, strpos(file_get_contents(dirname($dir) . '/debug.log'), 'DEBUG2') > 0);
-		unlink(dirname($dir) . '/debug.log');
-		rmdir(dirname($dir));
-
-		ini_set('error_log', '');
-		$log = new \vakata\log\Log();
-		$log->debug('DEBUG3');
-		$this->assertEquals(true, strpos(file_get_contents(getcwd() . '/debug.log'), 'DEBUG3') > 0);
-		unlink(getcwd() . '/debug.log');
+		$this->assertEquals(true, strpos(file_get_contents($file), 'DEBUG2') > 0);
 	}
 	/**
 	 * @depends testCreate
 	 */
 	public function testLevels() {
-		$dir = __DIR__ . DIRECTORY_SEPARATOR . 'log';
-		$log = new \vakata\log\Log(\vakata\log\Log::ALL ^ \vakata\log\Log::DEBUG, $dir);
+		$file = self::$dir . DIRECTORY_SEPARATOR . 'levels.log';
+		$log = new \vakata\log\Log(\vakata\log\Log::ALL ^ \vakata\log\Log::DEBUG, $file);
 		$this->assertEquals(true, $log->debug('DEBUG'));
-		$this->assertEquals(false, is_file($dir . '/debug.log'));
+		$this->assertEquals(false, is_file($file));
 
 		foreach ([ 'emergency', 'alert', 'critical', 'error', 'warning', 'notice', 'info' ] as $k => $level) {
 			$log->{$level}('MESS_' . $level, [ 'index' => 'index_' . $k ]);
-			$this->assertEquals(true, strpos(file_get_contents($dir . '/'.$level.'.log'), 'MESS_' . $level) > 0);
-			$this->assertEquals(true, strpos(file_get_contents($dir . '/'.$level.'.log'), 'index_' . $k) > 0);
-			unlink($dir . '/' . $level . '.log');
+			$this->assertEquals(true, strpos(file_get_contents($file), 'MESS_' . $level) > 0);
+			$this->assertEquals(true, strpos(file_get_contents($file), 'index_' . $k) > 0);
 		}
-		rmdir($dir);
 	}
 	/**
 	 * @depends testCreate
 	 */
 	public function testContext() {
-		$dir = __DIR__ . DIRECTORY_SEPARATOR . 'log';
-		$log = new \vakata\log\Log(\vakata\log\Log::ALL, $dir, ['context' => 'sample_context']);
+		$file = self::$dir . DIRECTORY_SEPARATOR . 'context.log';
+		$log = new \vakata\log\Log(\vakata\log\Log::ALL, $file, ['context' => 'sample_context']);
 		$this->assertEquals(true, $log->debug('DEBUG'));
-		$this->assertEquals(true, strpos(file_get_contents($dir . '/debug.log'), 'sample_context') > 0);
+		$this->assertEquals(true, strpos(file_get_contents($file), 'sample_context') > 0);
 		$log->addContext([ 'more' => 'more_context' ]);
 		$this->assertEquals(true, $log->debug('DEBUG'));
-		$this->assertEquals(true, strpos(file_get_contents($dir . '/debug.log'), 'more_context') > 0);
-		unlink($dir . '/debug.log');
-		rmdir($dir);
+		$this->assertEquals(true, strpos(file_get_contents($file), 'more_context') > 0);
 	}
 	/**
 	 * @depends testCreate
 	 */
 	public function testException() {
-		$dir = __DIR__ . DIRECTORY_SEPARATOR . 'log';
-		$log = new \vakata\log\Log(\vakata\log\Log::ALL, $dir, ['context' => 'sample_context']);
+		$file = self::$dir . DIRECTORY_SEPARATOR . 'exception.log';
+		$log = new \vakata\log\Log(\vakata\log\Log::ALL, $file, ['context' => 'sample_context']);
 		try {
 			throw new \Exception('test_exception');
 		}
 		catch(\Exception $e) {
 			$log->debug($e);
 		}
-		$this->assertEquals(true, strpos(file_get_contents($dir . '/debug.log'), 'test_exception') > 0);
-		unlink($dir . '/debug.log');
-		rmdir($dir);
+		$this->assertEquals(true, strpos(file_get_contents($file), 'test_exception') > 0);
 	}
 }

@@ -15,13 +15,13 @@ class Log implements LogInterface
     const ALL = 255;
 
     protected $level;
-    protected $directory;
+    protected $location;
     protected $additionalContext;
 
-    public function __construct($level = null, $directory = '', array $additionalContext = [])
+    public function __construct($level = null, $location = null, array $additionalContext = [])
     {
         $this->level = $level !== null ? $level : static::ALL;
-        $this->directory = rtrim($directory, '/\\');
+        $this->location = $location ? $location : ini_get('error_log');
         $this->additionalContext = $additionalContext;
     }
 
@@ -46,20 +46,6 @@ class Log implements LogInterface
                 return 'debug';
         }
     }
-    protected function getDirectory()
-    {
-        if ($this->directory) {
-            return $this->directory;
-        }
-        if (ini_get('error_log')) {
-            return dirname(ini_get('error_log'));
-        }
-        if (getcwd()) {
-            return getcwd();
-        }
-
-        return __DIR__;
-    }
     protected function log($severity, $message, array $context = [])
     {
         if (!((int) $severity & $this->level)) {
@@ -73,19 +59,16 @@ class Log implements LogInterface
             $context['trace'] = $message->getTrace();
             $message = $message->getMessage();
         }
-        $directory = $this->getDirectory();
-        if (!is_dir($directory)) {
-            mkdir($directory, 0755, true);
-        }
 
-        return (bool) @error_log(
+        return (bool)@error_log(
             (
                 date('[d-M-Y H:i:s e] ') .
+                'PHP ' . ucfirst($this->getLevel($severity)) . ': ' .
                 $message . "\n" .
-                json_encode($context, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_FORCE_OBJECT) . "\n\n"
+                json_encode($context, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_FORCE_OBJECT) . "\n"
             ),
             3,
-            $directory.'/'.$this->getLevel($severity).'.log'
+            $this->location
         );
     }
     public function addContext($context)
