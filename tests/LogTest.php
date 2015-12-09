@@ -11,6 +11,9 @@ class LogTest extends \PHPUnit_Framework_TestCase
 	}
 	protected function setUp() {
 		self::$dir = __DIR__ . DIRECTORY_SEPARATOR . 'log';
+		if (is_dir(self::$dir)) {
+			$this->tearDown();
+		}
 		mkdir(self::$dir, 0755, true);
 	}
 	protected function tearDown() {
