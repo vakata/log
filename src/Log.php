@@ -60,6 +60,9 @@ class Log implements LogInterface
             $message = $message->getMessage();
         }
 
+        if (!is_dir(dirname($this->location))) {
+            mkdir(dirname($this->location), 0755, true);
+        }
         return (bool)@error_log(
             (
                 date('[d-M-Y H:i:s e] ') .

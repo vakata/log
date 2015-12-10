@@ -19,14 +19,27 @@ $ composer require vakata/log
 ## Usage
 
 ``` php
+// create an instance
+// by default all error levels are logged to the default "error_log" location
 $log = new \vakata\log\Log();
+// log a message with some params
 $log->debug('Just some info', ['context'=>'params']);
+// add some additional context for all future calls
 $log->addContext(['context'=>'for all future logs']);
+// directly logging exceptions works too
 try {
+    throw new Exception('Some exception');
 }
 catch (\Exception $e) {
-    $log->error($e); // logging exceptions works
+    $log->error($e);
 }
+
+// you can optionally make sure only certain error levels are logged
+// and also specify a file for the log
+$log = new \vakata\log\Log(
+    \vakata\log\Log::ALL ^ \vakata\log\Log::DEBUG, // we log everything but debug
+    __DIR__ . '/path/to.log'
+);
 ```
 
 ## Testing
