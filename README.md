@@ -42,6 +42,8 @@ $log = new \vakata\log\Log(
 );
 ```
 
+Read more in the [API docs](docs/README.md)
+
 ## Testing
 
 ``` bash
