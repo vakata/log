@@ -18,6 +18,13 @@ class Log implements LogInterface
     protected $location;
     protected $additionalContext;
 
+    /**
+     * Create an instance.
+     * @method __construct
+     * @param  bitflag     $level             only levels listed here will be stored (defaults to all)
+     * @param  string      $location          log file location (defaults to ini_get(error_log))
+     * @param  array       $additionalContext additional data to store with each entry
+     */
     public function __construct($level = null, $location = null, array $additionalContext = [])
     {
         $this->level = $level !== null ? $level : static::ALL;
@@ -74,39 +81,91 @@ class Log implements LogInterface
             $this->location
         );
     }
+    /**
+     * adds more context parameters for future entries
+     * @method addContext
+     * @param  array     $context data to store along with each log entry
+     */
     public function addContext($context)
     {
         $this->additionalContext = array_merge($this->additionalContext, $context);
     }
-
+    /**
+     * log an emergency
+     * @method emergency
+     * @param  string|\Exception  $message event description
+     * @param  array     $context event context
+     */
     public function emergency($message, array $context = [])
     {
         return $this->log(static::EMERGENCY, $message, $context);
     }
+    /**
+     * log an alert
+     * @method emergency
+     * @param  string|\Exception  $message event description
+     * @param  array     $context event context
+     */
     public function alert($message, array $context = [])
     {
         return $this->log(static::ALERT, $message, $context);
     }
+    /**
+     * log a cricital event
+     * @method emergency
+     * @param  string|\Exception  $message event description
+     * @param  array     $context event context
+     */
     public function critical($message, array $context = [])
     {
         return $this->log(static::CRITICAL, $message, $context);
     }
+    /**
+     * log an error
+     * @method emergency
+     * @param  string|\Exception  $message event description
+     * @param  array     $context event context
+     */
     public function error($message, array $context = [])
     {
         return $this->log(static::ERROR, $message, $context);
     }
+    /**
+     * log a warning
+     * @method emergency
+     * @param  string|\Exception  $message event description
+     * @param  array     $context event context
+     */
     public function warning($message, array $context = [])
     {
         return $this->log(static::WARNING, $message, $context);
     }
+    /**
+     * log a notice
+     * @method emergency
+     * @param  string|\Exception  $message event description
+     * @param  array     $context event context
+     */
     public function notice($message, array $context = [])
     {
         return $this->log(static::NOTICE, $message, $context);
     }
+    /**
+     * log an info event
+     * @method emergency
+     * @param  string|\Exception  $message event description
+     * @param  array     $context event context
+     */
     public function info($message, array $context = [])
     {
         return $this->log(static::INFO, $message, $context);
     }
+    /**
+     * log a debug message
+     * @method emergency
+     * @param  string|\Exception  $message event description
+     * @param  array     $context event context
+     */
     public function debug($message, array $context = [])
     {
         return $this->log(static::DEBUG, $message, $context);
