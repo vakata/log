@@ -63,7 +63,7 @@ class Log implements LogInterface
             $context['code'] = $message->getCode();
             $context['file'] = $message->getFile();
             $context['line'] = $message->getLine();
-            $context['trace'] = $message->getTrace();
+            $context['trace'] = $message->getTraceAsString();
             $message = $message->getMessage();
         }
 
