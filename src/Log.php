@@ -64,7 +64,7 @@ class Log implements LogInterface
             $context['file'] = $message->getFile();
             $context['line'] = $message->getLine();
             $context['trace'] = explode("\n", trim($message->getTraceAsString(), "\r\n"));
-            $message = get_class($message) . ':' . $message->getMessage();
+            $message = get_class($message) . ': ' . $message->getMessage();
         }
 
         $location = is_callable($this->location) ?
