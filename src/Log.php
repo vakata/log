@@ -21,9 +21,9 @@ class Log implements LogInterface
     /**
      * Create an instance.
      * @method __construct
-     * @param  bitflag     $level             only levels listed here will be stored (defaults to all)
-     * @param  string      $location          log file location (defaults to ini_get(error_log))
-     * @param  array       $additionalContext additional data to store with each entry
+     * @param  bitflag              $level             only levels listed here will be stored (defaults to all)
+     * @param  string|callable      $location          log file location (defaults to ini_get(error_log))
+     * @param  array                $additionalContext additional data to store with each entry
      */
     public function __construct($level = null, $location = null, array $additionalContext = [])
     {
@@ -67,8 +67,16 @@ class Log implements LogInterface
             $message = $message->getMessage();
         }
 
-        if (!is_dir(dirname($this->location))) {
-            mkdir(dirname($this->location), 0755, true);
+        $location = is_callable($this->location) ?
+            call_user_func($this->location, $severity, $this->getLevel($severity)) :
+            $this->location;
+
+        if ($location === false) {
+            return true;
+        }
+
+        if (!is_dir(dirname($location))) {
+            mkdir(dirname($location), 0755, true);
         }
         return (bool)@error_log(
             (
@@ -78,7 +86,7 @@ class Log implements LogInterface
                 json_encode($context, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_FORCE_OBJECT) . "\n"
             ),
             3,
-            $this->location
+            $location
         );
     }
     /**
