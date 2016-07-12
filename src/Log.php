@@ -57,12 +57,15 @@ class Log implements LogInterface
             return true;
         }
         $context = array_merge($this->additionalContext, $context);
+        $context['isException'] = false;
         if ($message instanceof \Exception) {
+            $context['isException'] = true;
+            $context['exceptionClass'] = get_class($message);
             $context['code'] = $message->getCode();
             $context['file'] = $message->getFile();
             $context['line'] = $message->getLine();
             $context['trace'] = explode("\n", trim($message->getTraceAsString(), "\r\n"));
-            $message = get_class($message) . ': ' . $message->getMessage();
+            $message = $message->getMessage();
         }
 
         $handled = false;
