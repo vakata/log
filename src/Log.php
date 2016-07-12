@@ -14,21 +14,19 @@ class Log implements LogInterface
     const DEBUG = 128;
     const ALL = 255;
 
-    protected $level;
-    protected $location;
-    protected $additionalContext;
+    protected $level = 255;
+    protected $handlers = [];
+    protected $additionalContext = [];
 
     /**
      * Create an instance.
      * @method __construct
-     * @param  bitflag              $level             only levels listed here will be stored (defaults to all)
-     * @param  string|callable      $location          log file location (defaults to ini_get(error_log))
      * @param  array                $additionalContext additional data to store with each entry
+     * @param  bitflag              $level             only levels listed here will be stored (defaults to all)
      */
-    public function __construct($level = null, $location = null, array $additionalContext = [])
+    public function __construct(array $additionalContext = [], $level = null)
     {
         $this->level = $level !== null ? $level : static::ALL;
-        $this->location = $location ? $location : ini_get('error_log');
         $this->additionalContext = $additionalContext;
     }
 
@@ -67,27 +65,38 @@ class Log implements LogInterface
             $message = get_class($message) . ': ' . $message->getMessage();
         }
 
-        $location = is_callable($this->location) ?
-            call_user_func($this->location, $severity, $this->getLevel($severity)) :
-            $this->location;
-
-        if ($location === false) {
-            return true;
+        $handled = false;
+        foreach ($this->handlers as $handler) {
+            if ((int)$severity & $handler['level']) {
+                $handled = true;
+                call_user_func($handler['handler'], $message, $context, $severity, $this->getLevel($severity));
+            }
         }
-
-        if (!is_dir(dirname($location))) {
-            mkdir(dirname($location), 0755, true);
-        }
-        return (bool)@error_log(
-            (
-                date('[d-M-Y H:i:s e] ') .
-                'PHP ' . ucfirst($this->getLevel($severity)) . ': ' .
-                $message . "\n" .
-                json_encode($context, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_FORCE_OBJECT) . "\n"
-            ),
-            3,
-            $location
-        );
+        return $handled;
+    }
+    /**
+     * helper function which returns a file storage callback to use with addHandler
+     * @method logToFile
+     * @param  string|null $location  where to store the messages, defaults to the default error_log
+     * @return callable               a function ready to pass to addHandler
+     */
+    public static function logToFile($location = null) {
+        return function ($message, $context, $severity, $level) use ($location) {
+            $location = $location !== null ? $location : ini_get('error_log');
+            if (!is_dir(dirname($location))) {
+                mkdir(dirname($location), 0755, true);
+            }
+            return (bool)@error_log(
+                (
+                    date('[d-M-Y H:i:s e] ') .
+                    'PHP ' . ucfirst($level) . ': ' .
+                    $message . "\n" .
+                    json_encode($context, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_FORCE_OBJECT) . "\n"
+                ),
+                3,
+                $location
+            );
+        };
     }
     /**
      * adds more context parameters for future entries
@@ -97,6 +106,19 @@ class Log implements LogInterface
     public function addContext($context)
     {
         $this->additionalContext = array_merge($this->additionalContext, $context);
+        return $this;
+    }
+    /**
+     * add a log handler in order to store the log entry
+     * @method addHandler
+     * @param  callable   $handler a function to execute, wihch receives the message, context & severity of the message
+     * @param  int|null   $level   optional bitmask level to invoke the handler for (defaults to ALL)
+     */
+    public function addHandler(callable $handler, $level = null)
+    {
+        $level = $level !== null ? $level : static::ALL;
+        $this->handlers[] = [ 'level' => $level, 'handler' => $handler ];
+        return $this;
     }
     /**
      * log an emergency

@@ -34,13 +34,15 @@ class LogTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testDirs() {
 		$file = self::$dir . DIRECTORY_SEPARATOR . 'predefined.log';
-		$log = new \vakata\log\Log(\vakata\log\Log::ALL, $file);
+		$log = new \vakata\log\Log([], \vakata\log\Log::ALL);
+		$log->addHandler(\vakata\log\Log::logToFile($file));
 		$log->debug('DEBUG');
 		$this->assertEquals(true, strpos(file_get_contents($file), 'DEBUG') > 0);
 
 		$file = self::$dir . DIRECTORY_SEPARATOR . 'default.log';
 		ini_set('error_log', $file);
 		$log = new \vakata\log\Log();
+		$log->addHandler(\vakata\log\Log::logToFile($file));
 		$log->debug('DEBUG2');
 		$this->assertEquals(true, strpos(file_get_contents($file), 'DEBUG2') > 0);
 	}
@@ -49,7 +51,8 @@ class LogTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testLevels() {
 		$file = self::$dir . DIRECTORY_SEPARATOR . 'levels.log';
-		$log = new \vakata\log\Log(\vakata\log\Log::ALL ^ \vakata\log\Log::DEBUG, $file);
+		$log = new \vakata\log\Log([], \vakata\log\Log::ALL ^ \vakata\log\Log::DEBUG);
+		$log->addHandler(\vakata\log\Log::logToFile($file));
 		$this->assertEquals(true, $log->debug('DEBUG'));
 		$this->assertEquals(false, is_file($file));
 
@@ -64,7 +67,8 @@ class LogTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testContext() {
 		$file = self::$dir . DIRECTORY_SEPARATOR . 'context.log';
-		$log = new \vakata\log\Log(\vakata\log\Log::ALL, $file, ['context' => 'sample_context']);
+		$log = new \vakata\log\Log(['context' => 'sample_context']);
+		$log->addHandler(\vakata\log\Log::logToFile($file));
 		$this->assertEquals(true, $log->debug('DEBUG'));
 		$this->assertEquals(true, strpos(file_get_contents($file), 'sample_context') > 0);
 		$log->addContext([ 'more' => 'more_context' ]);
@@ -76,7 +80,8 @@ class LogTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testException() {
 		$file = self::$dir . DIRECTORY_SEPARATOR . 'exception.log';
-		$log = new \vakata\log\Log(\vakata\log\Log::ALL, $file, ['context' => 'sample_context']);
+		$log = new \vakata\log\Log(['context' => 'sample_context']);
+		$log->addHandler(\vakata\log\Log::logToFile($file));
 		try {
 			throw new \Exception('test_exception');
 		}
