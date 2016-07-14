@@ -58,7 +58,7 @@ class Log implements LogInterface
         }
         $context = array_merge($this->additionalContext, $context);
         $context['isException'] = false;
-        if ($message instanceof \Exception) {
+        if ((interface_exists('Throwable') && $message instanceof \Throwable) || $message instanceof \Exception) {
             $context['isException'] = true;
             $context['exceptionClass'] = get_class($message);
             $context['code'] = $message->getCode();
