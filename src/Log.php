@@ -101,7 +101,7 @@ class Log implements LogInterface
             if (!($errno & error_reporting())) {
                 return true;
             }
-            $e = new ErrorException($errstr, $errno, $errno, $errfile, $errline);
+            $e = new \ErrorException($errstr, $errno, $errno, $errfile, $errline);
             // stop processing for "lightweight" errors
             switch ($errno) {
                 case E_NOTICE:
@@ -114,10 +114,10 @@ class Log implements LogInterface
                 case E_WARNING:
                 case E_USER_WARNING:
                     $this->warning($e);
-                    throw new ErrorException($errstr, $errno, $errno, $errfile, $errline);
+                    throw $e;
                 default:
                     $this->error($e);
-                    throw new ErrorException($errstr, $errno, $errno, $errfile, $errline);
+                    throw $e;
             }
         });
         set_exception_handler(function ($e) use ($handler) {
