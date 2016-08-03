@@ -5,8 +5,10 @@
 
 | Name | Description |
 |------|-------------|
-|[__construct](#vakata\log\log__construct)|Create an instance.|
+|[logToFile](#vakata\log\loglogtofile)|helper function which returns a file storage callback to use with addHandler|
+|[setupErrorHandling](#vakata\log\logsetuperrorhandling)|Setup an opinionated uncaught error and exception handling.|
 |[addContext](#vakata\log\logaddcontext)|adds more context parameters for future entries|
+|[addHandler](#vakata\log\logaddhandler)|add a log handler in order to store the log entry|
 |[emergency](#vakata\log\logemergency)|log an emergency|
 |[alert](#vakata\log\logalert)|log an alert|
 |[critical](#vakata\log\logcritical)|log a cricital event|
@@ -20,23 +22,41 @@
 
 
 
-### vakata\log\Log::__construct
-Create an instance.  
+### vakata\log\Log::logToFile
+helper function which returns a file storage callback to use with addHandler  
 
 
 ```php
-public function __construct (  
-    \bitflag $level,  
-    string $location,  
-    array $additionalContext  
-)   
+public static function logToFile (  
+    string|null $location  
+) : callable    
 ```
 
 |  | Type | Description |
 |-----|-----|-----|
-| `$level` | `\bitflag` | only levels listed here will be stored (defaults to all) |
-| `$location` | `string` | log file location (defaults to ini_get(error_log)) |
-| `$additionalContext` | `array` | additional data to store with each entry |
+| `$location` | `string`, `null` | where to store the messages, defaults to the default error_log |
+|  |  |  |
+| `return` | `callable` | a function ready to pass to addHandler |
+
+---
+
+
+### vakata\log\Log::setupErrorHandling
+Setup an opinionated uncaught error and exception handling.  
+All notice / deprecated / strict errors are only logged, everything else triggers an exception.  
+Exceptions are logged and then an optional handler callable is invoked.
+
+```php
+public function setupErrorHandling (  
+    callable|null $handler  
+) : self    
+```
+
+|  | Type | Description |
+|-----|-----|-----|
+| `$handler` | `callable`, `null` | uncaught exception handler, has a single param - the exception |
+|  |  |  |
+| `return` | `self` |  |
 
 ---
 
@@ -54,6 +74,25 @@ public function addContext (
 |  | Type | Description |
 |-----|-----|-----|
 | `$context` | `array` | data to store along with each log entry |
+
+---
+
+
+### vakata\log\Log::addHandler
+add a log handler in order to store the log entry  
+
+
+```php
+public function addHandler (  
+    callable $handler,  
+    int|null $level  
+)   
+```
+
+|  | Type | Description |
+|-----|-----|-----|
+| `$handler` | `callable` | a function to execute, wihch receives the message, context & severity of the message |
+| `$level` | `int`, `null` | optional bitmask level to invoke the handler for (defaults to ALL) |
 
 ---
 

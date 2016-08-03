@@ -51,9 +51,9 @@ class LogTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testLevels() {
 		$file = self::$dir . DIRECTORY_SEPARATOR . 'levels.log';
-		$log = new \vakata\log\Log([], \vakata\log\Log::ALL ^ \vakata\log\Log::DEBUG);
-		$log->addHandler(\vakata\log\Log::logToFile($file));
-		$this->assertEquals(true, $log->debug('DEBUG'));
+		$log = new \vakata\log\Log();
+		$log->addHandler(\vakata\log\Log::logToFile($file), \vakata\log\Log::ALL ^ \vakata\log\Log::DEBUG);
+		$this->assertEquals(false, $log->debug('DEBUG'));
 		$this->assertEquals(false, is_file($file));
 
 		foreach ([ 'emergency', 'alert', 'critical', 'error', 'warning', 'notice', 'info' ] as $k => $level) {
@@ -67,7 +67,8 @@ class LogTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testContext() {
 		$file = self::$dir . DIRECTORY_SEPARATOR . 'context.log';
-		$log = new \vakata\log\Log(['context' => 'sample_context']);
+		$log = new \vakata\log\Log();
+		$log->addContext(['context' => 'sample_context']);
 		$log->addHandler(\vakata\log\Log::logToFile($file));
 		$this->assertEquals(true, $log->debug('DEBUG'));
 		$this->assertEquals(true, strpos(file_get_contents($file), 'sample_context') > 0);

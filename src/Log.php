@@ -14,21 +14,8 @@ class Log implements LogInterface
     const DEBUG = 128;
     const ALL = 255;
 
-    protected $level = 255;
     protected $handlers = [];
     protected $additionalContext = [];
-
-    /**
-     * Create an instance.
-     * @method __construct
-     * @param  array                $additionalContext additional data to store with each entry
-     * @param  bitflag              $level             only levels listed here will be stored (defaults to all)
-     */
-    public function __construct(array $additionalContext = [], $level = null)
-    {
-        $this->level = $level !== null ? $level : static::ALL;
-        $this->additionalContext = $additionalContext;
-    }
 
     protected function getLevel($severity)
     {
@@ -51,16 +38,13 @@ class Log implements LogInterface
                 return 'debug';
         }
     }
-    protected function log($severity, $message, array $context = [])
+    protected function log(int $severity, $message, array $context = [])
     {
-        if (!((int) $severity & $this->level)) {
-            return true;
-        }
         $context = array_merge($this->additionalContext, $context);
         $context['isException'] = false;
-        if ((interface_exists('Throwable') && $message instanceof \Throwable) || $message instanceof \Exception) {
+        if ($message instanceof \Throwable) {
             $context['isException'] = true;
-            $context['exceptionClass'] = get_class($message);
+            $context['isInternal'] = ($message instanceof \Error) || ($message instanceof \ErrorException);
             $context['code'] = $message->getCode();
             $context['file'] = $message->getFile();
             $context['line'] = $message->getLine();
@@ -70,7 +54,7 @@ class Log implements LogInterface
 
         $handled = false;
         foreach ($this->handlers as $handler) {
-            if ((int)$severity & $handler['level']) {
+            if ($severity & $handler['level']) {
                 $handled = true;
                 call_user_func($handler['handler'], $message, $context, $severity, $this->getLevel($severity));
             }
@@ -83,7 +67,7 @@ class Log implements LogInterface
      * @param  string|null $location  where to store the messages, defaults to the default error_log
      * @return callable               a function ready to pass to addHandler
      */
-    public static function logToFile($location = null) {
+    public static function logToFile(string $location = null) {
         return function ($message, $context, $severity, $level) use ($location) {
             $location = $location !== null ? $location : ini_get('error_log');
             if (!is_dir(dirname($location))) {
@@ -101,12 +85,55 @@ class Log implements LogInterface
             );
         };
     }
+
+    /**
+     * Setup an opinionated uncaught error and exception handling.
+     * All notice / deprecated / strict errors are only logged, everything else triggers an exception. 
+     * Exceptions are logged and then an optional handler callable is invoked.
+     * @method setupErrorHandling
+     * @param  callable|null $handler uncaught exception handler, has a single param - the exception
+     * @return self
+     */
+    public function setupErrorHandling(callable $handler = null)
+    {
+        set_error_handler(function ($errno, $errstr, $errfile, $errline) {
+            // do not touch errors that are not marked for reporting
+            if (!($errno & error_reporting())) {
+                return true;
+            }
+            $e = new ErrorException($errstr, $errno, $errno, $errfile, $errline);
+            // stop processing for "lightweight" errors
+            switch ($errno) {
+                case E_NOTICE:
+                case E_DEPRECATED:
+                case E_STRICT:
+                case E_USER_NOTICE:
+                case E_USER_DEPRECATED:
+                    $this->notice($e);
+                    return true;
+                case E_WARNING:
+                case E_USER_WARNING:
+                    $this->warning($e);
+                    throw new ErrorException($errstr, $errno, $errno, $errfile, $errline);
+                default:
+                    $this->error($e);
+                    throw new ErrorException($errstr, $errno, $errno, $errfile, $errline);
+            }
+        });
+        set_exception_handler(function ($e) use ($handler) {
+            $this->error($e);
+            if ($handler) {
+                call_user_func($handler, $e);
+            }
+        });
+        return $this;
+    }
     /**
      * adds more context parameters for future entries
      * @method addContext
      * @param  array     $context data to store along with each log entry
      */
-    public function addContext($context)
+    public function addContext(array $context)
     {
         $this->additionalContext = array_merge($this->additionalContext, $context);
         return $this;
@@ -117,7 +144,7 @@ class Log implements LogInterface
      * @param  callable   $handler a function to execute, wihch receives the message, context & severity of the message
      * @param  int|null   $level   optional bitmask level to invoke the handler for (defaults to ALL)
      */
-    public function addHandler(callable $handler, $level = null)
+    public function addHandler(callable $handler, int $level = null)
     {
         $level = $level !== null ? $level : static::ALL;
         $this->handlers[] = [ 'level' => $level, 'handler' => $handler ];
