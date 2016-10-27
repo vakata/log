@@ -63,7 +63,6 @@ class Log implements LogInterface
     }
     /**
      * helper function which returns a file storage callback to use with addHandler
-     * @method logToFile
      * @param  string|null $location  where to store the messages, defaults to the default error_log
      * @return callable               a function ready to pass to addHandler
      */
@@ -90,7 +89,6 @@ class Log implements LogInterface
      * Setup an opinionated uncaught error and exception handling.
      * All notice / deprecated / strict errors are only logged, everything else triggers an exception. 
      * Exceptions are logged and then an optional handler callable is invoked.
-     * @method setupErrorHandling
      * @param  callable|null $handler uncaught exception handler, has a single param - the exception
      * @return self
      */
@@ -130,7 +128,6 @@ class Log implements LogInterface
     }
     /**
      * adds more context parameters for future entries
-     * @method addContext
      * @param  array     $context data to store along with each log entry
      */
     public function addContext(array $context)
@@ -140,7 +137,6 @@ class Log implements LogInterface
     }
     /**
      * add a log handler in order to store the log entry
-     * @method addHandler
      * @param  callable   $handler a function to execute, wihch receives the message, context & severity of the message
      * @param  int|null   $level   optional bitmask level to invoke the handler for (defaults to ALL)
      */
@@ -152,7 +148,6 @@ class Log implements LogInterface
     }
     /**
      * log an emergency
-     * @method emergency
      * @param  string|\Exception  $message event description
      * @param  array     $context event context
      */
@@ -162,7 +157,6 @@ class Log implements LogInterface
     }
     /**
      * log an alert
-     * @method emergency
      * @param  string|\Exception  $message event description
      * @param  array     $context event context
      */
@@ -172,7 +166,6 @@ class Log implements LogInterface
     }
     /**
      * log a cricital event
-     * @method emergency
      * @param  string|\Exception  $message event description
      * @param  array     $context event context
      */
@@ -182,7 +175,6 @@ class Log implements LogInterface
     }
     /**
      * log an error
-     * @method emergency
      * @param  string|\Exception  $message event description
      * @param  array     $context event context
      */
@@ -192,7 +184,6 @@ class Log implements LogInterface
     }
     /**
      * log a warning
-     * @method emergency
      * @param  string|\Exception  $message event description
      * @param  array     $context event context
      */
@@ -202,7 +193,6 @@ class Log implements LogInterface
     }
     /**
      * log a notice
-     * @method emergency
      * @param  string|\Exception  $message event description
      * @param  array     $context event context
      */
@@ -212,7 +202,6 @@ class Log implements LogInterface
     }
     /**
      * log an info event
-     * @method emergency
      * @param  string|\Exception  $message event description
      * @param  array     $context event context
      */
@@ -222,7 +211,6 @@ class Log implements LogInterface
     }
     /**
      * log a debug message
-     * @method emergency
      * @param  string|\Exception  $message event description
      * @param  array     $context event context
      */
